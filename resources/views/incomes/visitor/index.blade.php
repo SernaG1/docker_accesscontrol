@@ -11,9 +11,10 @@
             <input type="text" name="numero_documento" id="numero_documento" class="form-control" value="{{ old('numero_documento', request('numero_documento')) }}" required>
         </div>
         <button type="submit" class="btn btn-primary">Buscar</button>
+        {{-- Biometría desactivada temporalmente.
         <button type="button" class="btn btn-success me-2" onclick="startFingerprintVerification('visitor')">
             <i class="fas fa-fingerprint"></i> Validar Huella
-        </button>
+        </button> --}}
     </form>
 
     <hr>
@@ -199,7 +200,7 @@
 
 @section('scripts')
 <script>
-function startFingerprintVerification(source = "visitor") {
+/* function startFingerprintVerification(source = "visitor") {
     const validationResultBody = document.getElementById('validationResultBody');
     const validationModal = new bootstrap.Modal(document.getElementById('validationModal'));
     const csrfToken = '{{ csrf_token() }}';
@@ -272,6 +273,6 @@ function showVisitorModal(user, csrfToken) {
     `;
     const modal = new bootstrap.Modal(document.getElementById('visitorModalDynamic'));
     modal.show();
-}
+} */
 </script>
 @endsection

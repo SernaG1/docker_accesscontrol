@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\EmployeeAccessLog;
-use App\Models\EmployeeFingerprint;
 use Illuminate\Http\Request;
 
 class EmployeeIncomeController extends Controller
@@ -94,19 +93,7 @@ class EmployeeIncomeController extends Controller
             'direccion' => 'nullable|string|max:255',
             'area' => 'nullable|string|max:100',
             'foto_webcam' => 'nullable|string',
-            'biometric_data' => 'required|string',
-            'tipo_dedo' => 'required|string',
-        ], [
-            'biometric_data.required' => 'El registro biométrico es obligatorio para crear un empleado.',
-            'tipo_dedo.required' => 'Debe seleccionar un dedo para el registro biométrico.',
         ]);
-
-        // Verify biometric data is not empty
-        if (empty($request->input('biometric_data'))) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['biometric_data' => 'El registro biométrico es obligatorio.']);
-        }
 
         $employee = new Employee();
         $employee->fill($request->only([
@@ -133,14 +120,7 @@ class EmployeeIncomeController extends Controller
 
         $employee->save();
 
-        // Always create fingerprint record since biometric_data is required
-        EmployeeFingerprint::create([
-            'employee_id' => $employee->id,
-            'fingerprint_template' => $request->input('biometric_data'),
-            'finger_type' => $request->input('tipo_dedo'),
-        ]);
-
-        return redirect()->route('employee.index')->with('success', 'Empleado registrado exitosamente con registro biométrico.');
+        return redirect()->route('employee.index')->with('success', 'Empleado registrado exitosamente.');
     }
 
     public function edit(Employee $employee)

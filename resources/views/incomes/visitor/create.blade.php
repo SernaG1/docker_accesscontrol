@@ -18,18 +18,20 @@
         @endif
 
         {{-- Scanner input for autocompletion --}}
+        {{-- Biometría desactivada temporalmente.
+        {{-- Biometría desactivada temporalmente.
         <div class="mb-3">
             <label for="scanner_string" class="form-label">Entrada del Scanner (cadena)</label>
             <input type="text" id="scanner_string" name="scanner_string" class="form-control" placeholder="Pega la cadena del scanner aquí">
             <button type="button" class="btn btn-secondary mt-2" id="parseScannerBtn">Autocompletar campos</button>
             <div id="scannerError" class="text-danger mt-2" style="display:none;"></div>
-        </div>
+        </div> --}}
 
         {{-- Datos personales --}}
         <div class="mb-3">
             <label for="numero_documento" class="form-label">Número de Documento</label>
             <input type="text" name="numero_documento" class="form-control" required>
-        </div>
+        </div> --}}
 
         <div class="mb-3">
             <label for="nombres" class="form-label">Nombres</label>
@@ -125,7 +127,7 @@
         {{-- Campo oculto para guardar la imagen --}}
         <input type="hidden" name="foto_webcam" id="foto_webcam">
 
-        {{-- Selección tipo de dedo --}}
+        {{-- Biometría desactivada temporalmente.
         <div class="mb-3">
             <label for="tipo_dedo" class="form-label">Seleccione el Tipo de Dedo</label>
             <select name="tipo_dedo" id="tipo_dedo" class="form-select" required>
@@ -141,7 +143,7 @@
                 <option value="anular_derecho">Anular Derecho</option>
                 <option value="meñique_derecho">Meñique Derecho</option>
             </select>
-        </div>
+        </div> --}}
 
         {{-- Validación Biométrica --}}
         <div class="mb-3">
@@ -157,10 +159,10 @@
             <div id="biometricResult" class="mt-2"></div>
             <input type="hidden" name="biometric_data" id="biometric_data">
             <input type="hidden" name="user_type" value="visitor">
-        </div>
+        </div> --}}
 
         {{-- Botón de envío --}}
-        <button type="submit" class="btn btn-primary" onclick="return validateBiometric()">Registrar Ingreso</button>
+        <button type="submit" class="btn btn-primary">Registrar Ingreso</button>
     </form>
 </div>
 @endsection
@@ -235,7 +237,7 @@ document.getElementById('parseScannerBtn').addEventListener('click', function() 
 });
 </script>
 
-<script>
+{{-- <script>
     async function enrollBiometric() {
         const btn = document.querySelector('button[onclick="enrollBiometric()"]');
         const spinner = document.getElementById('biometricSpinner');
@@ -289,5 +291,5 @@ document.getElementById('parseScannerBtn').addEventListener('click', function() 
         
         return true;
     }
-</script>
+</script> --}}
 @endsection

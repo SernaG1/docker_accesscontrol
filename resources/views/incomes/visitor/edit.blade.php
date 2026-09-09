@@ -125,7 +125,7 @@
         {{-- Campo oculto para guardar la imagen --}}
         <input type="hidden" name="foto_webcam" id="foto_webcam" value="{{ old('foto_webcam', $usersIncome->foto_webcam) }}">
 
-        {{-- Selección tipo de dedo --}}
+        {{-- Biometría desactivada temporalmente.
         <div class="mb-3">
             <label for="tipo_dedo" class="form-label">Seleccione el Tipo de Dedo</label>
             <select name="tipo_dedo" id="tipo_dedo" class="form-select">
@@ -141,9 +141,9 @@
                 <option value="anular_derecho">Anular Derecho</option>
                 <option value="meñique_derecho">Meñique Derecho</option>
             </select>
-        </div>
+        </div> --}}
 
-        {{-- Validación Biométrica --}}
+        {{-- Biometría desactivada temporalmente.
         <div class="mb-3">
             <label class="form-label">Validación Biométrica</label>
             <div class="d-flex align-items-center">
@@ -157,7 +157,7 @@
             <div id="biometricResult" class="mt-2"></div>
             <input type="hidden" name="biometric_data" id="biometric_data">
             <input type="hidden" name="user_type" value="visitor">
-        </div>
+        </div> --}}
 
         <button type="submit" class="btn btn-primary">Actualizar</button>
     </form>
@@ -189,7 +189,7 @@
         });
     }
 
-    async function enrollBiometric() {
+    /* async function enrollBiometric() {
         const btn = document.querySelector('button[onclick="enrollBiometric()"]');
         const spinner = document.getElementById('biometricSpinner');
         const resultDiv = document.getElementById('biometricResult');
@@ -237,6 +237,6 @@
             spinner.style.display = 'none';
             clearTimeout(timeoutId);
         }
-    }
+    } */
 </script>
 @endsection

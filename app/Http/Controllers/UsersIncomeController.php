@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\UsersIncome;
 use App\Models\AccessLog;
-use App\Models\VisitorFingerprint;
 use Illuminate\Http\Request;
 
 use App\Models\Employee;
@@ -80,19 +79,7 @@ class UsersIncomeController extends Controller
             'direccion' => 'nullable|string|max:255',
             'area' => 'nullable|string|max:100',
             'foto_webcam' => 'nullable|string',
-            'biometric_data' => 'required|string',
-            'tipo_dedo' => 'required|string',
-        ], [
-            'biometric_data.required' => 'El registro biométrico es obligatorio para crear un visitante.',
-            'tipo_dedo.required' => 'Debe seleccionar un dedo para el registro biométrico.',
         ]);
-
-        // Verify biometric data is not empty
-        if (empty($request->input('biometric_data'))) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['biometric_data' => 'El registro biométrico es obligatorio.']);
-        }
 
         $income = new UsersIncome();
         $income->fill($request->only([
@@ -119,14 +106,7 @@ class UsersIncomeController extends Controller
 
         $income->save();
 
-        // Always create fingerprint record since biometric_data is required
-        VisitorFingerprint::create([
-            'visitor_id' => $income->id,
-            'fingerprint_template' => $request->input('biometric_data'),
-            'finger_type' => $request->input('tipo_dedo'),
-        ]);
-
-        return redirect()->route('visitor.index')->with('success', 'Visitante registrado exitosamente con registro biométrico.');
+        return redirect()->route('visitor.index')->with('success', 'Visitante registrado exitosamente.');
     }
 
     public function edit(UsersIncome $usersIncome)

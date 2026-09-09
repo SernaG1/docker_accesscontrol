@@ -3,7 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\UsersIncomeApi;
-use App\Http\Controllers\BiometricController;
+// use App\Http\Controllers\BiometricController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,10 +23,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('/usersincome/parse-scanner', [UsersIncomeApi::class, 'parseScannerString'])
     ->name('usersincome.parseScanner');
 
-// Biometría - Captura de huella (enrollment)
-Route::post('/capture', [BiometricController::class, 'capture'])
-    ->name('fingerprint.capture');
-
-// Biometría - Validación/Identificación  de huella
-Route::post('/identify', [BiometricController::class, 'identify'])
-    ->name('fingerprint.identify');
+// Biometría desactivada temporalmente para este ejercicio.
+// Route::post('/capture', [BiometricController::class, 'capture'])
+//     ->name('fingerprint.capture');
+// Route::post('/identify', [BiometricController::class, 'identify'])
+//     ->name('fingerprint.identify');

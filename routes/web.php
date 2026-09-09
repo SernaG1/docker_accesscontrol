@@ -8,7 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\EmployeeAccessLogController;
 use App\Http\Controllers\EmployeeIncomeController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\BiometricController;
+// use App\Http\Controllers\BiometricController;
 
 Route::get('/', function () {
     if (auth('admin')->check()) {
@@ -76,7 +76,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::post('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     Route::get('/reports/export-data', [ReportController::class, 'exportData'])->name('reports.exportData');
 
-    // Rutas biométricas
-    Route::post('/biometric/capture', [BiometricController::class, 'capture'])->name('biometric.capture');
-    Route::post('/biometric/validate', [BiometricController::class, 'validateFingerprint'])->name('biometric.validate');
+    // Rutas biométricas desactivadas temporalmente para este ejercicio.
+    // Route::post('/biometric/capture', [BiometricController::class, 'capture'])->name('biometric.capture');
+    // Route::post('/biometric/validate', [BiometricController::class, 'validateFingerprint'])->name('biometric.validate');
 });
