@@ -1,66 +1,281 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# AccessControl
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema web para administrar el ingreso de empleados y visitantes. La
+aplicacion permite registrar personas, capturar su fotografia mediante webcam,
+consultar sus datos, controlar entradas y salidas, procesar colas y generar
+reportes de acceso.
 
-## About Laravel
+## Arquitectura Docker
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+El entorno se ejecuta como un ecosistema de contenedores conectado a la red
+interna `accesscontrol`. Cada servicio tiene una responsabilidad concreta y se
+inicia respetando sus dependencias.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```text
+Navegador
+	 |
+	 v
+Nginx :8080
+	 |
+	 v
+PHP-FPM (Laravel)
+	 |--------------> MySQL :3306
+	 |--------------> Queue worker
+	 `--------------> Scheduler
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+init: migraciones + seeder + storage:link
+```
 
-## Learning Laravel
+### Servicios
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+| Servicio | Imagen o construccion | Funcion tecnica | Uso funcional |
+| --- | --- | --- | --- |
+| `db` | `mysql:8.4` | Ejecuta MySQL, crea la base `accesscontrol` y expone un healthcheck. | Conserva usuarios, empleados, visitantes, accesos, sesiones y datos de la aplicacion. |
+| `init` | `accesscontrol_app` | Espera a que `db` este saludable y ejecuta `migrate`, `db:seed --class=AdminSeeder` y `storage:link`. | Prepara la base de datos y el almacenamiento antes de permitir el inicio de los servicios Laravel. Termina con `Exited (0)` cuando trabaja correctamente. |
+| `app` | `accesscontrol_app` | Ejecuta PHP-FPM en el puerto interno `9000`. | Atiende la logica Laravel: autenticacion, formularios, registros, consultas y reportes. |
+| `queue` | `accesscontrol_app` | Ejecuta `php artisan queue:work` con reintentos y timeout. | Procesa tareas diferidas sin bloquear las solicitudes web. |
+| `scheduler` | `accesscontrol_app` | Ejecuta `php artisan schedule:work`. | Ejecuta las tareas programadas definidas por Laravel. |
+| `nginx` | `nginx:1.27-alpine` | Sirve archivos publicos y reenvia PHP a `app:9000` mediante FastCGI. | Es la puerta de entrada HTTP para el navegador. |
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+`app`, `queue` y `scheduler` esperan a que `init` termine correctamente. Nginx
+espera a que `app` este iniciado y utiliza el nombre DNS interno `app`, que
+Docker Compose resuelve dentro de la red del proyecto.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Archivos y carpetas Docker
 
-## Laravel Sponsors
+```text
+Dockerfile
+docker-compose.yml
+docker/
+├── entrypoint.sh
+└── nginx/
+	 └── default.conf
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### `Dockerfile`
 
-### Premium Partners
+Construye la imagen `accesscontrol_app` en tres etapas:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+1. `vendor`: instala las dependencias PHP de Composer usando
+	`composer.lock`, sin dependencias de desarrollo.
+2. `frontend`: instala las dependencias Node con `npm ci` y genera los
+	recursos compilados mediante `npm run build`.
+3. Imagen final PHP 8.3 FPM sobre Debian Bookworm: instala las extensiones
+	PHP requeridas, copia el codigo, descubre los paquetes Laravel y prepara
+	permisos de `storage` y `bootstrap/cache`.
 
-## Contributing
+La imagen no incluye Nginx. PHP-FPM escucha internamente en `9000` y Nginx se
+encarga del trafico HTTP.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### `docker-compose.yml`
 
-## Code of Conduct
+Define los servicios, la red, las dependencias, los puertos y los volumenes.
+El comando de inicializacion es:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```text
+php artisan migrate --force
+php artisan db:seed --class=AdminSeeder --force
+php artisan storage:link --force
+```
 
-## Security Vulnerabilities
+El `AdminSeeder` crea o actualiza el administrador inicial de forma idempotente,
+por lo que reiniciar Compose no debe generar un usuario duplicado.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### `docker/entrypoint.sh`
 
-## License
+Es el punto de entrada de la imagen PHP. Antes de iniciar el proceso recibido:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- crea las carpetas requeridas por Laravel;
+- ajusta propietario y permisos para `www-data`;
+- ejecuta el comando original de la imagen mediante `exec`.
+
+En `app`, por ejemplo, termina ejecutando `php-fpm`. En `queue` y `scheduler`
+prepara el mismo entorno y luego ejecuta el comando indicado por Compose.
+
+### `docker/nginx/default.conf`
+
+Configura Nginx para:
+
+- publicar `/var/www/html/public` como raiz web;
+- redirigir las rutas Laravel a `public/index.php`;
+- enviar archivos PHP a `app:9000`;
+- impedir el acceso directo a archivos ocultos como `.env` y `.git`.
+
+## Volumenes y persistencia
+
+| Volumen | Montaje | Contenido |
+| --- | --- | --- |
+| `app_code` | `/var/www/html` | Codigo de la aplicacion compartido por `init`, `app`, `queue`, `scheduler` y Nginx. |
+| `storage_data` | `/var/www/html/storage` | Fotos, logs, cache, sesiones y archivos generados por Laravel. |
+| `mysql_data` | `/var/lib/mysql` | Datos persistentes de MySQL. |
+
+Los volumenes permiten recrear contenedores sin perder datos. `docker compose
+down` detiene y elimina contenedores, pero conserva los volumenes. Para borrar
+tambien la base de datos y los archivos persistentes se debe usar:
+
+```bash
+sudo docker compose down -v
+```
+
+## Requisitos
+
+- Docker Engine en ejecucion.
+- Docker Compose v2 (`docker compose`).
+- Un archivo `.env` en la raiz del proyecto con la configuracion Laravel y la
+  conexion a la base de datos.
+- Permisos para acceder al daemon Docker. En Linux puede usarse `sudo` o
+  agregar el usuario al grupo `docker`.
+
+La aplicacion usa los siguientes valores internos definidos en Compose:
+
+```text
+Base de datos: accesscontrol
+Usuario:       accesscontrol
+Password:      accesscontrol_password
+Host interno:  db
+Puerto interno: 3306
+```
+
+Desde el equipo anfitrion, MySQL se publica en el puerto `3307` y la aplicacion
+web en el puerto `8080`.
+
+## Puesta en marcha
+
+Desde la raiz del proyecto:
+
+```bash
+sudo docker compose build
+sudo docker compose up -d
+```
+
+Consultar el estado:
+
+```bash
+sudo docker compose ps -a
+```
+
+El resultado esperado es:
+
+- `db`: `Healthy`;
+- `init`: `Exited (0)`;
+- `app`, `queue`, `scheduler` y `nginx`: `Up` o `Started`.
+
+El estado `Exited (0)` de `init` es correcto: es un contenedor de una sola
+ejecucion, no un proceso permanente.
+
+La aplicacion queda disponible en:
+
+```text
+http://localhost:8080
+```
+
+### Usuario inicial
+
+El seeder crea el administrador utilizado para acceder al login:
+
+```text
+Usuario:     admin
+Contrasena:  adminpassword
+```
+
+Estas credenciales son de desarrollo. En un entorno real deben cambiarse y no
+deben conservarse como valores por defecto.
+
+## Operacion funcional
+
+1. El administrador inicia sesion desde `/login`.
+2. Desde el panel puede registrar empleados y visitantes.
+3. Los formularios capturan la fotografia desde la webcam y guardan el archivo
+	en el almacenamiento publico de Laravel.
+4. El sistema permite consultar y editar los registros, registrar entradas y
+	salidas, consultar personas dentro de las instalaciones y generar reportes.
+5. La cola y el scheduler permanecen disponibles para trabajos diferidos y
+	tareas programadas.
+
+El enrolamiento de huella esta desactivado en los formularios de alta y edicion
+de empleados y visitantes. La captura y validacion mediante camara permanece
+disponible. El codigo biometrico existente no forma parte del flujo requerido
+para registrar estos formularios.
+
+## Logs y mantenimiento
+
+Ver todos los logs:
+
+```bash
+sudo docker compose logs -f
+```
+
+Ver un servicio concreto:
+
+```bash
+sudo docker compose logs -f init
+sudo docker compose logs -f app
+sudo docker compose logs -f nginx
+sudo docker compose logs -f db
+```
+
+Detener los servicios sin borrar datos:
+
+```bash
+sudo docker compose stop
+```
+
+Reiniciar la arquitectura:
+
+```bash
+sudo docker compose up -d
+```
+
+Entrar al contenedor de Laravel para ejecutar comandos Artisan:
+
+```bash
+sudo docker compose exec app php artisan route:list
+sudo docker compose exec app php artisan view:cache
+```
+
+## Diagnostico rapido
+
+### `permission denied` en `/var/run/docker.sock`
+
+El usuario actual no tiene permisos sobre el daemon Docker. Ejecuta los
+comandos con `sudo` o configura el grupo `docker` para el usuario.
+
+### `init` termina con error
+
+Revisar el log del inicializador y la salud de MySQL:
+
+```bash
+sudo docker compose logs init
+sudo docker compose logs db
+sudo docker compose ps -a
+```
+
+Las causas habituales son credenciales incorrectas en `.env`, una base de datos
+no saludable o una migracion con error.
+
+### La web no responde en el puerto 8080
+
+Comprobar que el puerto no este ocupado y revisar Nginx y PHP-FPM:
+
+```bash
+sudo docker compose ps
+sudo docker compose logs nginx
+sudo docker compose logs app
+```
+
+### Faltan fotos o archivos de storage
+
+Verificar el volumen `storage_data` y volver a crear el enlace desde `init`:
+
+```bash
+sudo docker compose run --rm init php artisan storage:link --force
+```
+
+## Consideraciones de seguridad
+
+- Cambiar las contrasenas de MySQL y del administrador antes de publicar el
+  sistema fuera de un entorno local.
+- No versionar `.env` ni exponerlo mediante Nginx.
+- Publicar solo los puertos necesarios.
+- Mantener actualizadas las imagenes base y las dependencias Composer y npm.
+- Usar HTTPS y una politica de acceso adecuada en ambientes productivos.

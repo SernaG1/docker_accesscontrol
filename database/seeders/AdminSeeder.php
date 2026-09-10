@@ -10,9 +10,9 @@ class AdminSeeder extends Seeder
 {
     public function run()
     {
-        Admin::create([
-            'username' => 'admin',
-            'password' => Hash::make('adminpassword'),  // Usamos Hash para cifrar la contraseña
-        ]);
+        Admin::updateOrCreate(
+            ['username' => 'admin'],
+            ['password' => Hash::make('adminpassword')]
+        );
     }
 }

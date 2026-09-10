@@ -125,40 +125,6 @@
         {{-- Campo oculto para guardar la imagen --}}
         <input type="hidden" name="foto_webcam" id="foto_webcam" value="{{ old('foto_webcam', $usersIncome->foto_webcam) }}">
 
-        {{-- Biometría desactivada temporalmente.
-        <div class="mb-3">
-            <label for="tipo_dedo" class="form-label">Seleccione el Tipo de Dedo</label>
-            <select name="tipo_dedo" id="tipo_dedo" class="form-select">
-                <option value="" disabled selected>Seleccione</option>
-                <option value="pulgar_izquierdo">Pulgar Izquierdo</option>
-                <option value="indice_izquierdo">Índice Izquierdo</option>
-                <option value="medio_izquierdo">Medio Izquierdo</option>
-                <option value="anular_izquierdo">Anular Izquierdo</option>
-                <option value="meñique_izquierdo">Meñique Izquierdo</option>
-                <option value="pulgar_derecho">Pulgar Derecho</option>
-                <option value="indice_derecho">Índice Derecho</option>
-                <option value="medio_derecho">Medio Derecho</option>
-                <option value="anular_derecho">Anular Derecho</option>
-                <option value="meñique_derecho">Meñique Derecho</option>
-            </select>
-        </div> --}}
-
-        {{-- Biometría desactivada temporalmente.
-        <div class="mb-3">
-            <label class="form-label">Validación Biométrica</label>
-            <div class="d-flex align-items-center">
-                <button type="button" class="btn btn-success me-2" onclick="enrollBiometric()">
-                    <i class="fas fa-fingerprint"></i> Enrolar Validación Biométrica
-                </button>
-                <div id="biometricSpinner" class="spinner-border text-primary" style="display:none;" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-            </div>
-            <div id="biometricResult" class="mt-2"></div>
-            <input type="hidden" name="biometric_data" id="biometric_data">
-            <input type="hidden" name="user_type" value="visitor">
-        </div> --}}
-
         <button type="submit" class="btn btn-primary">Actualizar</button>
     </form>
 </div>
@@ -189,54 +155,5 @@
         });
     }
 
-    /* async function enrollBiometric() {
-        const btn = document.querySelector('button[onclick="enrollBiometric()"]');
-        const spinner = document.getElementById('biometricSpinner');
-        const resultDiv = document.getElementById('biometricResult');
-
-        btn.disabled = true;
-        spinner.style.display = 'inline-block';
-        resultDiv.textContent = '';
-
-        // Create timeout controller
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-        try {
-            const response = await fetch('/api/capture', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({
-                    tipo_dedo: document.querySelector('select[name="tipo_dedo"]').value
-                }),
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            const data = await response.json();
-
-            if (response.ok && data.status === 'success') {
-                resultDiv.textContent = 'Huella capturada correctamente.';
-                document.getElementById('biometric_data').value = data.huella;
-            } else {
-                resultDiv.textContent = data.message || 'Error en la captura biométrica.';
-            }
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                resultDiv.textContent = 'Tiempo de espera agotado. Por favor, intente nuevamente.';
-            } else {
-                resultDiv.textContent = 'Error de conexión: ' + error.message;
-            }
-        } finally {
-            btn.disabled = false;
-            spinner.style.display = 'none';
-            clearTimeout(timeoutId);
-        }
-    } */
 </script>
 @endsection
